@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sisyphus Volume Slider</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #1e272e;
+            color: #d2dae2;
+            overflow: hidden; /* Prevents scrollbars when the button runs away */
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #808e9b;
+            margin-bottom: 40px;
+        }
+
+        #volume-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Make the slider vertical so "gravity" makes sense */
+        input[type="range"] {
+            -webkit-appearance: slider-vertical;
+            width: 20px;
+            height: 300px;
+            cursor: grab;
+        }
+        
+        input[type="range"]:active {
+            cursor: grabbing;
+        }
+
+        #volume-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #0fbcf9;
+            width: 150px;
+            text-align: center;
+        }
+
+        #lock-btn {
+            position: fixed;
+            bottom: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            background: #ff3f34;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: top 0.1s, left 0.1s; /* Smooth but fast teleportation */
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: #0be881;
+            font-weight: bold;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Adjust System Volume</h1>
+    <p>Drag to desired level and lock it. Fast.</p>
+
+    <div id="volume-container">
+        <div id="volume-display">0%</div>
+        <input type="range" id="volume-slider" min="0" max="100" value="0">
+    </div>
+
+    <div id="status"></div>
+    <button id="lock-btn">Lock Volume</button>
+
+    <script>
+        const slider = document.getElementById('volume-slider');
+        const display = document.getElementById('volume-display');
+        const lockBtn = document.getElementById('lock-btn');
+        const status = document.getElementById('status');
+        
+        let volume = 0;
+        let locked = false;
+
+        // The Gravity Engine
+        // Pulls the slider down every 60 milliseconds if it's not locked
+        setInterval(() => {
+            if (!locked && slider.value > 0) {
+                slider.value = parseInt(slider.value) - 1;
+                display.innerText = slider.value + '%';
+            }
+        }, 60);
+
+        // Update display when user drags
+        slider.addEventListener('input', (e) => {
+            if (locked) {
+                // If they try to drag it while locked, force it back
+                e.preventDefault();
+                slider.value = volume;
+                return;
+            }
+            display.innerText = slider.value + '%';
+        });
+
+        // The Runaway Button Engine
+        lockBtn.addEventListener('mouseover', () => {
+            if (locked) return; // Don't run away if already locked (so they can unlock it)
+
+            // Remove the initial centering transform so our raw left/top coordinates work perfectly
+            lockBtn.style.transform = "none";
+
+            // Calculate safe boundaries so the button doesn't teleport off-screen
+            const maxX = window.innerWidth - lockBtn.clientWidth - 20;
+            const maxY = window.innerHeight - lockBtn.clientHeight - 20;
+            
+            // Generate random coordinates
+            const randomX = Math.max(20, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(20, Math.floor(Math.random() * maxY));
+            
+            // Teleport
+            lockBtn.style.left = randomX + 'px';
+            lockBtn.style.top = randomY + 'px';
+        });
+
+        // The victory condition (if they somehow manage to click it)
+        lockBtn.addEventListener('click', () => {
+            if (!locked) {
+                locked = true;
+                volume = slider.value;
+                status.innerText = `Volume secured at ${volume}%. Good luck next time.`;
+                lockBtn.innerText = "Unlock";
+                lockBtn.style.background = "#0be881";
+            } else {
+                // Let them unlock it to suffer again
+                locked = false;
+                status.innerText = "";
+                lockBtn.innerText = "Lock Volume";
+                lockBtn.style.background = "#ff3f34";
+            }
+        });
+    </script>
+</body>
+</html>
