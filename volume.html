@@ -15,7 +15,7 @@
             margin: 0;
             background-color: #1e272e;
             color: #d2dae2;
-            overflow: hidden; /* Prevents scrollbars when the button runs away */
+            overflow: hidden;
         }
 
         h1 {
@@ -34,7 +34,6 @@
             gap: 20px;
         }
 
-        /* Make the slider vertical so "gravity" makes sense */
         input[type="range"] {
             -webkit-appearance: slider-vertical;
             width: 20px;
@@ -68,13 +67,13 @@
             border: none;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: top 0.1s, left 0.1s; /* Smooth but fast teleportation */
+            /* Instant teleportation, no smooth transitions to give them hope */
         }
 
         #status {
             margin-top: 20px;
             font-size: 1.2rem;
-            color: #0be881;
+            color: #ff3f34;
             font-weight: bold;
             height: 30px;
         }
@@ -83,7 +82,7 @@
 <body>
 
     <h1>Adjust System Volume</h1>
-    <p>Drag to desired level and lock it. Fast.</p>
+    <p>Drag to desired level and lock it. Good luck.</p>
 
     <div id="volume-container">
         <div id="volume-display">0%</div>
@@ -99,65 +98,21 @@
         const lockBtn = document.getElementById('lock-btn');
         const status = document.getElementById('status');
         
-        let volume = 0;
-        let locked = false;
-
         // The Gravity Engine
-        // Pulls the slider down every 60 milliseconds if it's not locked
+        // Constantly pulls the slider down to 0
         setInterval(() => {
-            if (!locked && slider.value > 0) {
+            if (slider.value > 0) {
                 slider.value = parseInt(slider.value) - 1;
                 display.innerText = slider.value + '%';
             }
         }, 60);
 
         // Update display when user drags
-        slider.addEventListener('input', (e) => {
-            if (locked) {
-                // If they try to drag it while locked, force it back
-                e.preventDefault();
-                slider.value = volume;
-                return;
-            }
+        slider.addEventListener('input', () => {
             display.innerText = slider.value + '%';
+            status.innerText = ""; // Clear the mock message if they try again
         });
 
-        // The Runaway Button Engine
-        lockBtn.addEventListener('mouseover', () => {
-            if (locked) return; // Don't run away if already locked (so they can unlock it)
-
-            // Remove the initial centering transform so our raw left/top coordinates work perfectly
-            lockBtn.style.transform = "none";
-
-            // Calculate safe boundaries so the button doesn't teleport off-screen
-            const maxX = window.innerWidth - lockBtn.clientWidth - 20;
-            const maxY = window.innerHeight - lockBtn.clientHeight - 20;
-            
-            // Generate random coordinates
-            const randomX = Math.max(20, Math.floor(Math.random() * maxX));
-            const randomY = Math.max(20, Math.floor(Math.random() * maxY));
-            
-            // Teleport
-            lockBtn.style.left = randomX + 'px';
-            lockBtn.style.top = randomY + 'px';
-        });
-
-        // The victory condition (if they somehow manage to click it)
-        lockBtn.addEventListener('click', () => {
-            if (!locked) {
-                locked = true;
-                volume = slider.value;
-                status.innerText = `Volume secured at ${volume}%. Good luck next time.`;
-                lockBtn.innerText = "Unlock";
-                lockBtn.style.background = "#0be881";
-            } else {
-                // Let them unlock it to suffer again
-                locked = false;
-                status.innerText = "";
-                lockBtn.innerText = "Lock Volume";
-                lockBtn.style.background = "#ff3f34";
-            }
-        });
-    </script>
-</body>
-</html>
+        // The Teleportation Engine
+        function teleport() {
+            lockBtn.
